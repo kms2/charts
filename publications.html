@@ -1,0 +1,128 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script src="js/lib/opencin-sparql.js"></script>
+    <script src="js/lib/jquery-1.11.1.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+
+    var article = [];
+    var chapter = [];
+
+    var sparql_article = "select count(distinct ?name) as ?count_article ?issued where { ?public rdf:type cin:article . ?public cin:title ?name .?public cin:issued ?issued} group by ?issued order by ?issued ";
+
+    var sparql_chapter = "select count(distinct ?name) as ?count_chapter ?issued where { ?public rdf:type cin:chapter . ?public cin:title ?name . ?public cin:issued ?issued } group by ?issued order by ?issued";
+
+    querySuccess = function (response) {
+                  var json = JSON.parse(response);
+                  var results = (json.results.bindings);
+                  var quantidade = [],
+                      ano = [];
+                  
+                  var namespace = "http://www.cin.ufpe.br/opencin/";
+                     // menuMatch = [];
+                  for (var i = 0; i < results.length; i++) {
+                
+                      if(results[i].count_article != null){
+                        quantidade[i] = results[i].count_article.value;
+                        ano[i] = results[i].issued.value;
+
+                      article.push({
+                        "ano": ano[i],
+                        "quantidade": quantidade[i],
+                         
+                      });
+
+                    } else if(results[i].count_chapter != null){
+
+                         quantidade[i] = results[i].count_chapter.value;
+                         ano[i] = results[i].issued.value;
+
+                        chapter.push({
+                          "ano": ano[i],
+                          "quantidade": quantidade[i],
+                           
+                        });
+                      }
+                    
+
+                  }
+
+                  //document.getElementById("demo").innerHTML = resultQuery;
+    
+              }
+
+              google.load("visualization", "1.1", {packages:["bar"]});
+                     google.setOnLoadCallback(drawChart);
+                  function drawChart() {
+                    var row = [];
+
+                    row[0]=['Year', 'Articles', 'Chapters'];
+                    cont = 1;
+                    for(var i=0; i<article.length; i++){    
+                      for(var j=0; j<chapter.length; j++){
+                        if(article[i]['ano'] == chapter[j]['ano']){
+                           row[cont] = [article[i]['ano'],parseInt(article[i]['quantidade']), parseInt(chapter[j]['quantidade'])];
+                           cont++;                
+                         } 
+                       }
+                    }
+                    var data = google.visualization.arrayToDataTable(row);
+                    var options = {
+                      chart: {
+                        title: 'Publications for Years',
+                        subtitle: 'Articles and Chapters 1980 - 2014',
+                      },
+                        bars: 'vertical',
+                        vAxis: {format: 'decimal'},
+                        height: 550,
+                        legend: { position: 'top', maxLines: 3 },
+                        colors: ['#bf3e11', '#d95f02', '#7570b3'],
+                        isStacked: true,
+                        width:1200,
+                      };
+                 
+
+                    var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
+
+                    chart.draw(data, google.charts.Bar.convertOptions(options));
+                  }
+
+              var queryFail = function (response) {
+
+                  var data = [{
+                      "title": "error",
+                      "desc": "error_cin_connection",
+                      "clickable": false,
+                      "queryValue": "",
+                      "menuMatch": ""
+                  }];
+
+              }
+
+       var resultQueryChapter = query(
+                sparql_chapter,
+                  "json",
+                  querySuccess,
+                  queryFail);
+        console.log(querySuccess);
+
+       var resultQueryArticle = query(
+                sparql_article,
+                  "json",
+                  querySuccess,
+                  queryFail);
+        console.log(querySuccess);
+   
+
+    </script>
+  </head>
+
+    <body>
+    <div id="columnchart_material" style="width: 900px; height: 500px;"></div>
+
+    <div id="demo"></div>
+  </body>
+</html><script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1.1','packages':['bar']}]}"></script>
+       
+  

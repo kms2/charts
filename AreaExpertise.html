@@ -1,0 +1,86 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script src="js/lib/opencin-sparql.js"></script>
+    <script src="js/lib/jquery-1.11.1.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" charset="UTF-8">
+
+    var AreaExpertise = [];
+
+    var sparql = "select ?area count(distinct ?siape) as ?count where { ?x rdf:type cin:academic . ?x cin:hasAreaExpertise ?ea . ?ea cin:name ?area . ?x cin:siape ?siape } order by ?count";
+
+    querySuccess = function (response) {
+                  var json = JSON.parse(response);
+                  var results = (json.results.bindings);
+                  var quantidade = [],
+                      area = [];
+                  
+                  var namespace = "http://www.cin.ufpe.br/opencin/";
+
+                  for (var i = 0; i < results.length; i++) {
+              
+
+                     quantidade[i] = results[i].count.value;
+                     area[i] = results[i].area.value;
+
+                    AreaExpertise.push({
+                      "area": area[i],
+                      "quantidade": quantidade[i],
+                       
+                    });
+                    
+                  }    
+              }
+
+              google.load("visualization", "1", {packages:["corechart"]});
+                     google.setOnLoadCallback(drawChart);
+                  function drawChart() {
+                    var row = [];
+
+                    row[0]=['Area Expertise', 'Teachers'];
+                    cont = 1;
+                    for(var i=0; i<AreaExpertise.length; i++){                       
+                           row[cont] = [AreaExpertise[i]['area'],parseInt(AreaExpertise[i]['quantidade'])];
+                           cont++;
+                                          
+                    }
+                    var data = google.visualization.arrayToDataTable(row);
+                    var options = {
+                      title: 'Teachers for Area Expertise'
+                    };
+                             
+
+                   var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        chart.draw(data, options);
+                  }
+
+              var queryFail = function (response) {
+
+                  var data = [{
+                      "title": "error",
+                      "desc": "error_cin_connection",
+                      "clickable": false,
+                      "queryValue": "",
+                      "menuMatch": ""
+                  }];
+
+              }
+
+       var resultQuery = query(
+                sparql,
+                  "json",
+                  querySuccess,
+                  queryFail);
+        console.log(querySuccess)
+   
+    </script>
+  </head>
+
+    <body>
+    <div id="piechart" style="width: 1100px; height: 600px;"></div>
+  </body>
+</html>
+       
+  
